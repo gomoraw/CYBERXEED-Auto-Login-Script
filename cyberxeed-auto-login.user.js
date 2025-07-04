@@ -5,7 +5,7 @@
     // @description  Automates login for CYBERXEED & e-clocking on Safari with Makeover.
     // @author       Your Name
     // @match        https://*.i-abs.co.jp/cyberx/login.asp*
-    // @match        https://*.i-abs.co.jp/CX_e-clocking/*
+    // @match        https://*.i-abs.co.jp/CYBERXEED/*
     // @grant        none
     // @license      MIT
     // ==/UserScript==
