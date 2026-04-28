@@ -1,10 +1,9 @@
 // ==UserScript==
 // @name         CYBERXEED - グリッド全行表示
-// @namespace    https://github.com/gomoraw/CYBERXEED-Auto-Login-Script
-// @version      1.5.2
+// @namespace    https://github.com/gomoraw/
+// @version      1.6.1
 // @description  cx-grid の高さを自動調整して申請項目を全行表示する（scrollbar.scrollHeight 使用・全行表示対応）
 // @author       gomoraw
-// @date         2026-04-28
 // @match        https://cxg9.i-abs.co.jp/CYBERXEED/*
 // @match        https://cxg9.i-abs.co.jp/CYBERXEED/
 // @grant        none
@@ -15,33 +14,53 @@
 (function () {
   'use strict';
 
-  const VERSION        = '1.5.2';
+  const VERSION        = '1.6.1';
   const PAGER_H        = 28;
   const MARGIN         = 4;
   const TAG            = '[grid-expand]';
   const POLL_MS        = 1000;   // cx-grid 出現監視間隔
-  const PANEL_MS       = 2000;   // パネル存在確認間隔
   const DEBOUNCE_MS    = 150;    // MutationObserver デバウンス幅
   const MAX_VP_RATIO   = 0.90;   // ビューポート高さに対する最大割合
 
-  // ── ログパネル ──────────────────────────────────────────────────────────
+  // ── ログパネル（デフォルト非表示 / Alt+Shift+L でトグル）──────────────
   const panel = document.createElement('div');
   panel.id = 'grid-expand-log';
   panel.style.cssText = [
-    'position:fixed', 'bottom:8px', 'right:8px', 'z-index:2147483647',
+    'position:fixed', 'bottom:36px', 'right:8px', 'z-index:2147483647',
     'width:380px', 'max-height:240px', 'overflow-y:auto',
     'background:rgba(0,0,0,0.88)', 'color:#0f0', 'font:11px/1.4 monospace',
     'padding:6px 8px', 'border-radius:6px', 'pointer-events:none',
-    'white-space:pre-wrap', 'word-break:break-all'
+    'white-space:pre-wrap', 'word-break:break-all',
+    'display:none'
   ].join(';');
 
-  function ensurePanel() {
-    if (!document.getElementById('grid-expand-log')) {
-      (document.body || document.documentElement).appendChild(panel);
-    }
+  const toggle = document.createElement('div');
+  toggle.id = 'grid-expand-toggle';
+  toggle.title = 'Alt+Shift+L でもトグル';
+  toggle.style.cssText = [
+    'position:fixed', 'bottom:8px', 'right:8px', 'z-index:2147483647',
+    'width:24px', 'height:24px', 'border-radius:4px',
+    'background:rgba(0,0,0,0.45)', 'color:#0f0', 'font:11px/24px monospace',
+    'text-align:center', 'cursor:pointer', 'user-select:none'
+  ].join(';');
+  toggle.textContent = 'G';
+
+  function attachUI() {
+    var root = document.body || document.documentElement;
+    if (!document.getElementById('grid-expand-toggle')) root.appendChild(toggle);
+    if (!document.getElementById('grid-expand-log'))    root.appendChild(panel);
   }
-  setInterval(ensurePanel, PANEL_MS);
-  ensurePanel();
+
+  function togglePanel() {
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  }
+
+  toggle.addEventListener('click', togglePanel);
+  document.addEventListener('keydown', function (e) {
+    if (e.altKey && e.shiftKey && e.key === 'L') togglePanel();
+  });
+
+  attachUI();
 
   const LOG_COLOR = { info: '#0f0', warn: '#ff0', error: '#f66', debug: '#88f' };
 
@@ -125,12 +144,24 @@
       return false;
     }
 
-    // ビューポート高さを上限にして過大展開を抑制
-    var maxH     = Math.floor(window.innerHeight * MAX_VP_RATIO);
+    // 後続 .app-content（振替日数一覧など）が実質的な高さを持つ場合のみ上限を下げる
+    // DOM解析結果: cx-grid の後続 .app-content[1+] が振替日数一覧に該当（高さ約150px）
+    // afterH が80px以下の場合（後続コンテンツなし・小さいフッターのみ）は制限しない
+    var afterH = 0;
+    var appContents = document.querySelectorAll('.app-content');
+    for (var i = 1; i < appContents.length; i++) {
+      afterH += appContents[i].offsetHeight || 0;
+    }
+    var vpMax = Math.floor(window.innerHeight * MAX_VP_RATIO);
+    var maxH  = vpMax;
+    if (afterH > 80) {
+      var safeMax = Math.floor(vpMax - afterH - MARGIN * 4);
+      if (safeMax > 80) maxH = safeMax;
+    }
     var contentH = Math.min(totalH, maxH);
     var targetContH = contentH + PAGER_H + MARGIN;
 
-    log(trigger + ': scrollH=' + totalH + 'px max=' + maxH + 'px → target=' + targetContH + 'px', 'debug');
+    log(trigger + ': scrollH=' + totalH + 'px afterH=' + afterH + 'px vpMax=' + vpMax + 'px → target=' + targetContH + 'px', 'debug');
 
     if (currentH >= targetContH) {
       log(trigger + ': 高さ十分 (' + currentH + 'px)', 'debug');
