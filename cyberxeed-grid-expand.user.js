@@ -4,6 +4,7 @@
 // @version      1.5.2
 // @description  cx-grid の高さを自動調整して申請項目を全行表示する（scrollbar.scrollHeight 使用・全行表示対応）
 // @author       gomoraw
+// @date         2026-04-28
 // @match        https://cxg9.i-abs.co.jp/CYBERXEED/*
 // @match        https://cxg9.i-abs.co.jp/CYBERXEED/
 // @grant        none
