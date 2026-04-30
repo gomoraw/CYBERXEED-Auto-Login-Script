@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         CYBERXEED - グリッド全行表示
-// @namespace    https://github.com/gomoraw/
-// @version      1.6.1
-// @description  cx-grid の高さを自動調整して申請項目を全行表示する（scrollbar.scrollHeight 使用・全行表示対応）
+// @namespace    https://github.com/gomoraw/BrowseOps
+// @version      1.7.0
+// @description  cx-grid の高さを自動調整して申請項目を全行表示する（scrollbar.scrollHeight 使用・全行表示対応・初回直接アクセス時の遅延描画対応）
 // @author       gomoraw
 // @match        https://cxg9.i-abs.co.jp/CYBERXEED/*
 // @match        https://cxg9.i-abs.co.jp/CYBERXEED/
@@ -14,7 +14,7 @@
 (function () {
   'use strict';
 
-  const VERSION        = '1.6.1';
+  const VERSION        = '1.7.0';
   const PAGER_H        = 28;
   const MARGIN         = 4;
   const TAG            = '[grid-expand]';
@@ -116,8 +116,9 @@
   //   clientHeight = 現在可視部分（コンテナに依存）
   //   scrollHeight = 全行の合計高さ（コンテナサイズ非依存）← これを使う
   // lastSetContH ガードで MutationObserver のフィードバックループを防止
-  var expandCount  = 0;
-  var lastSetContH = -1;
+  var expandCount    = 0;
+  var lastSetContH   = -1;
+  var retryScheduled = false;
 
   function expandGrid(trigger) {
     var cont     = deepQuery('.cx-grid-container');
@@ -152,6 +153,17 @@
     for (var i = 1; i < appContents.length; i++) {
       afterH += appContents[i].offsetHeight || 0;
     }
+
+    // 後続コンテンツが未描画（初回直接アクセス時など）の場合、1回だけ再計算をスケジュール
+    if (afterH === 0 && !retryScheduled) {
+      retryScheduled = true;
+      setTimeout(function () {
+        retryScheduled = false;
+        lastSetContH = -1;
+        expandGrid(trigger + '-retry');
+      }, 800);
+    }
+
     var vpMax = Math.floor(window.innerHeight * MAX_VP_RATIO);
     var maxH  = vpMax;
     if (afterH > 80) {
@@ -163,8 +175,8 @@
 
     log(trigger + ': scrollH=' + totalH + 'px afterH=' + afterH + 'px vpMax=' + vpMax + 'px → target=' + targetContH + 'px', 'debug');
 
-    if (currentH >= targetContH) {
-      log(trigger + ': 高さ十分 (' + currentH + 'px)', 'debug');
+    if (Math.abs(currentH - targetContH) <= 2) {
+      log(trigger + ': 高さ一致 スキップ', 'debug');
       return true;
     }
 
