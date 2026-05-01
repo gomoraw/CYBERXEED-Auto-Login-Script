@@ -2,7 +2,7 @@
 // @name         CYBERXEED - グリッド全行表示
 // @namespace    https://github.com/gomoraw/BrowseOps
 // @version      1.7.0
-// @description  cx-grid の高さを自動調整して申請項目を全行表示する（scrollbar.scrollHeight 使用・全行表示対応・初回直接アクセス時の遅延描画対応）
+// @description  cx-grid の高さを自動調整して申請項目を全行表示する（グリッド開始位置基準の vpMax・親要素高さ強制設定）
 // @author       gomoraw
 // @match        https://cxg9.i-abs.co.jp/CYBERXEED/*
 // @match        https://cxg9.i-abs.co.jp/CYBERXEED/
@@ -116,9 +116,8 @@
   //   clientHeight = 現在可視部分（コンテナに依存）
   //   scrollHeight = 全行の合計高さ（コンテナサイズ非依存）← これを使う
   // lastSetContH ガードで MutationObserver のフィードバックループを防止
-  var expandCount    = 0;
-  var lastSetContH   = -1;
-  var retryScheduled = false;
+  var expandCount  = 0;
+  var lastSetContH = -1;
 
   function expandGrid(trigger) {
     var cont     = deepQuery('.cx-grid-container');
@@ -154,18 +153,13 @@
       afterH += appContents[i].offsetHeight || 0;
     }
 
-    // 後続コンテンツが未描画（初回直接アクセス時など）の場合、1回だけ再計算をスケジュール
-    if (afterH === 0 && !retryScheduled) {
-      retryScheduled = true;
-      setTimeout(function () {
-        retryScheduled = false;
-        lastSetContH = -1;
-        expandGrid(trigger + '-retry');
-      }, 800);
-    }
-
-    var vpMax = Math.floor(window.innerHeight * MAX_VP_RATIO);
-    var maxH  = vpMax;
+    // vpMax はグリッド開始位置より下の使用可能高さを基準にする
+    // window.innerHeight 全体で計算すると、ヘッダー・ツールバー分（実測 ~160px）を
+    // 無視して targetContH が過大になり、振替日数一覧を覆い隠す原因になる
+    var contRect = cont.getBoundingClientRect();
+    var availH  = window.innerHeight - Math.max(0, contRect.top);
+    var vpMax   = Math.floor(availH * MAX_VP_RATIO);
+    var maxH    = vpMax;
     if (afterH > 80) {
       var safeMax = Math.floor(vpMax - afterH - MARGIN * 4);
       if (safeMax > 80) maxH = safeMax;
@@ -173,16 +167,23 @@
     var contentH = Math.min(totalH, maxH);
     var targetContH = contentH + PAGER_H + MARGIN;
 
-    log(trigger + ': scrollH=' + totalH + 'px afterH=' + afterH + 'px vpMax=' + vpMax + 'px → target=' + targetContH + 'px', 'debug');
+    log(trigger + ': scrollH=' + totalH + 'px afterH=' + afterH + 'px availH=' + availH + 'px vpMax=' + vpMax + 'px → target=' + targetContH + 'px', 'debug');
 
-    if (Math.abs(currentH - targetContH) <= 2) {
-      log(trigger + ': 高さ一致 スキップ', 'debug');
+    if (currentH >= targetContH) {
+      log(trigger + ': 高さ十分 (' + currentH + 'px)', 'debug');
       return true;
     }
 
     lastSetContH = targetContH;
     cont.style.height  = targetContH + 'px';
     frame.style.height = (contentH + PAGER_H) + 'px';
+
+    // Angular が制御する親要素（CX-GRID・app-content[0]）も高さを強制設定する
+    // これをしないと cx-grid-container のオーバーフローが振替日数一覧を canvas で覆い隠す
+    var cxGridEl = deepQuery('cx-grid');
+    if (cxGridEl) cxGridEl.style.height = targetContH + 'px';
+    if (appContents[0]) appContents[0].style.minHeight = targetContH + 'px';
+
     window.dispatchEvent(new Event('resize'));
 
     expandCount++;
