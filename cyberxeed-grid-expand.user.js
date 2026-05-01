@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         CYBERXEED - グリッド全行表示
 // @namespace    https://github.com/gomoraw/BrowseOps
-// @version      1.7.0
-// @description  cx-grid の高さを自動調整して申請項目を全行表示する（グリッド開始位置基準の vpMax・親要素高さ強制設定）
+// @version      1.8.0
+// @description  cx-grid の高さを自動調整して申請項目を全行表示する（後続コンテンツなし時は vpMax キャップ解除・ページスクロール）
 // @author       gomoraw
 // @match        https://cxg9.i-abs.co.jp/CYBERXEED/*
 // @match        https://cxg9.i-abs.co.jp/CYBERXEED/
@@ -14,7 +14,7 @@
 (function () {
   'use strict';
 
-  const VERSION        = '1.7.0';
+  const VERSION        = '1.8.0';
   const PAGER_H        = 28;
   const MARGIN         = 4;
   const TAG            = '[grid-expand]';
@@ -164,7 +164,7 @@
       var safeMax = Math.floor(vpMax - afterH - MARGIN * 4);
       if (safeMax > 80) maxH = safeMax;
     }
-    var contentH = Math.min(totalH, maxH);
+    var contentH = afterH > 80 ? Math.min(totalH, maxH) : totalH;
     var targetContH = contentH + PAGER_H + MARGIN;
 
     log(trigger + ': scrollH=' + totalH + 'px afterH=' + afterH + 'px availH=' + availH + 'px vpMax=' + vpMax + 'px → target=' + targetContH + 'px', 'debug');
