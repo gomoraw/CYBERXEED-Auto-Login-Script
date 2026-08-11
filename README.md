@@ -104,7 +104,7 @@
 
 &nbsp;   // @match        https://\*.i-abs.co.jp/cyberx/login.asp\*
 
-&nbsp;   // @match        https://\*.i-abs.co.jp/CX\_e-clocking/\*
+&nbsp;   // @match        https://\*.i-abs.co.jp/CYBERXEED/\*
 
 &nbsp;   // @grant        none
 
@@ -269,6 +269,26 @@
 \*   \*\*Q: 安全性は大丈夫ですか？\*\*
 
 &nbsp;   \*   A: このスクリプトは、あなたのiPhone上のSafari内でのみ動作します。ログイン情報が開発者や第三者に送信されることはありませんのでご安心ください。ただし、スクリプトにパスワードを直接記述することのリスクはご理解の上、ご利用ください。
+
+
+
+\## 🖥️ おまけ: グリッド全行表示スクリプト (cyberxeed-grid-expand.user.js)
+
+
+
+CYBERXEEDのグリッド（申請一覧など）は初期表示だと高さが固定され、行数が多いと内部スクロールになってしまいます。このスクリプトは cx-grid の高さを実データ量に合わせて自動調整し、ページ全体で全行を表示できるようにします。
+
+
+
+\*   \*\*対象\*\*: Tampermonkeyなど、PCブラウザのユーザースクリプト拡張機能
+
+\*   \*\*導入方法\*\*: Tampermonkeyのダッシュボードで「新規スクリプト作成」を開き、\[cyberxeed-grid-expand.user.js](cyberxeed-grid-expand.user.js) の内容をそのまま貼り付けて保存します
+
+\*   \*\*動作確認画面右下\*\*: 「G」ボタンでログパネルを開閉できます（`Alt+Shift+L` でもトグル可能）
+
+
+
+&nbsp;   > ⚠️ スクリプト内の `@match` は動作確認済みの特定テナントのホスト名です。別テナントで使う場合はご自身の環境のホスト名に書き換えてください。
 
 
 
