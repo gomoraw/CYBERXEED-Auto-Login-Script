@@ -1,0 +1,6 @@
+# ローカル専用（PII を含む実機検証メモ・DOMスナップショット等）
+docs/
+
+# OS メタデータ
+.DS_Store
+Thumbs.db
