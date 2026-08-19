@@ -1,6 +1,9 @@
 # ローカル専用（PII を含む実機検証メモ・DOMスナップショット等）
 docs/
 
+# ローカル専用（非公開）
+CLAUDE.md
+
 # OS メタデータ
 .DS_Store
 Thumbs.db
