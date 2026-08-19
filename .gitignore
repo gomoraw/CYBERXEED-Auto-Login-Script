@@ -3,6 +3,7 @@ docs/
 
 # ローカル専用（非公開）
 CLAUDE.md
+.claudeignore
 
 # OS メタデータ
 .DS_Store
