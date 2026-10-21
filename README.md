@@ -135,6 +135,15 @@
 - **Q: 安全性は大丈夫ですか？**
   A: このスクリプトは、あなたのiPhone上のSafari内でのみ動作します。ログイン情報が開発者や第三者に送信されることはありませんのでご安心ください。ただし、スクリプトにパスワードを直接記述することのリスクはご理解の上、ご利用ください。
 
+## 🧩 Tampermonkey の初回設定（PC 向けスクリプト共通）
+
+Tampermonkey を新しく入れた場合、ユーザースクリプトを動かすには、ブラウザ側の許可が必要です。
+
+1. ブラウザの拡張機能の管理画面を開き、Tampermonkey の「詳細」を開きます
+2. 「**ユーザー スクリプトを許可する**」をオンにします
+
+オフのままだと、スクリプトをインストールしても動きません。
+
 ## 🖥️ グリッド全行表示スクリプト (cyberxeed-grid-expand.user.js)
 
 > ⚠️ **本スクリプトはPC専用です**（iPhone/Makeoverでは動作しません）。
@@ -142,7 +151,7 @@
 CYBERXEEDのグリッド（申請一覧など）は初期表示だと高さが固定され、行数が多いと内部スクロールになってしまいます。このスクリプトは cx-grid の高さを実データ量に合わせて自動調整し、ページ全体で全行を表示できるようにします。
 
 - **対象**: Tampermonkeyなど、PCブラウザのユーザースクリプト拡張機能
-- **導入方法**: Tampermonkeyのダッシュボードで「新規スクリプト作成」を開き、[cyberxeed-grid-expand.user.js](cyberxeed-grid-expand.user.js) の内容をそのまま貼り付けて保存します
+- **導入方法**: 上の「Tampermonkey の初回設定」を済ませてから、Tampermonkeyのダッシュボードで「新規スクリプト作成」を開き、[cyberxeed-grid-expand.user.js](cyberxeed-grid-expand.user.js) の内容をそのまま貼り付けて保存します
 - **動作確認画面右下**: 「G」ボタンでログパネルを開閉できます（`Alt+Shift+L` でもトグル可能）
 
 > ⚠️ スクリプト内の `@match` は動作確認済みの特定テナントのホスト名です。別テナントで使う場合はご自身の環境のホスト名に書き換えてください。
@@ -154,7 +163,7 @@ CYBERXEEDのグリッド（申請一覧など）は初期表示だと高さが�
 Microsoft 365 Copilot / Microsoft Copilot のチャット画面を開いたとき、モデル選択で **GPT-6.1** を自動で選びます。GPT-6.1 がメニューに無い場合は **Think deeper** を選びます。
 
 - **対象**: `https://copilot.cloud.microsoft/*`（`m365.cloud.microsoft/chat` からの転送先）、`https://m365.cloud.microsoft/*`、`https://copilot.microsoft.com/*`
-- **導入方法**: Tampermonkey を入れたブラウザで [こちらのリンク](https://raw.githubusercontent.com/gomoraw/CYBERXEED-Auto-Login-Script/main/copilot-auto-model-select.user.js) を開き、インストールします。または、Tampermonkey の「新規スクリプト作成」に [copilot-auto-model-select.user.js](copilot-auto-model-select.user.js) の内容を貼り付けて保存します
+- **導入方法**: 上の「Tampermonkey の初回設定」を済ませてから、Tampermonkey を入れたブラウザで [こちらのリンク](https://raw.githubusercontent.com/gomoraw/CYBERXEED-Auto-Login-Script/main/copilot-auto-model-select.user.js) を開き、インストールします。または、Tampermonkey の「新規スクリプト作成」に [copilot-auto-model-select.user.js](copilot-auto-model-select.user.js) の内容を貼り付けて保存します
 - **優先順の変更**: スクリプト先頭の `PRIORITY` に、メニューの表示名の先頭を優先順に並べます。下の階層のメニューにある項目は、`submenu` に親メニューの表示名の先頭を書きます（大文字小文字・空白・ハイフンは区別しません）
 - **選び直すタイミング**: ページを開いたとき、および「新しいチャット」を押したとき（どちらもモデルが「自動」に戻るため）
 
