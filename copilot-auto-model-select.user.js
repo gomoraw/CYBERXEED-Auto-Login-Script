@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         M365 Copilot - モデル自動選択（GPT-6.1 優先）
 // @namespace    https://github.com/gomoraw/BrowseOps
-// @version      1.3.0
+// @version      1.4.0
 // @description  Copilot のモデル選択で GPT-6.1 を選び、無ければ Think deeper を選ぶ
 // @author       gomoraw
 // @match        https://copilot.cloud.microsoft/*
@@ -19,37 +19,50 @@
     { label: 'gpt-6.1', submenu: 'gpt' },
     { label: 'think deeper' },
   ];
-  const MAX_TRIES = 40;
-  const RETRY_MS = 750;
-  const MENU_WAIT_MS = 400;
+  const POLL_MS = 50;
+  const SWITCHER_TIMEOUT_MS = 30000;
+  const MENU_TIMEOUT_MS = 2000;
+  const RESET_TIMEOUT_MS = 2000;
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const norm = (s) => (s || '').toLowerCase().replace(/[\s\-_‐-―]/g, '');
   const startsWith = (s, label) => norm(s).startsWith(norm(label));
   const menuItems = () => [...document.querySelectorAll('[role="menuitem"]')];
 
+  // fn() が真になるまで POLL_MS おきに確認する。時間切れなら null
+  async function waitFor(fn, timeout) {
+    const end = Date.now() + timeout;
+    for (;;) {
+      const v = fn();
+      if (v) return v;
+      if (Date.now() >= end) return null;
+      await sleep(POLL_MS);
+    }
+  }
+
   const findSwitcher = () =>
     document.querySelector('#gptModeSwitcher') ||
     document.querySelector('button[aria-label="Model Selector"]');
+  const isTop = (switcher) => startsWith(switcher.textContent, PRIORITY[0].label);
 
   // サブメニューを開いていると Escape 1 回では親メニューが残る
   async function closeMenu() {
     for (let i = 0; i < 3 && menuItems().length; i++) {
+      const before = menuItems().length;
       (document.activeElement || document.body).dispatchEvent(
         new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true })
       );
-      await sleep(150);
+      await waitFor(() => menuItems().length < before, 300);
     }
   }
 
   async function trySelect() {
-    const switcher = findSwitcher();
-    if (!switcher) return false;
-    if (startsWith(switcher.textContent, PRIORITY[0].label)) return true;
+    const switcher = await waitFor(findSwitcher, SWITCHER_TIMEOUT_MS);
+    if (!switcher) return true;
+    if (isTop(switcher)) return true;
 
     switcher.click();
-    await sleep(MENU_WAIT_MS);
-    if (!menuItems().length) return false;
+    if (!(await waitFor(() => menuItems().length, MENU_TIMEOUT_MS))) return false;
 
     for (const { label, submenu } of PRIORITY) {
       if (submenu) {
@@ -58,8 +71,9 @@
         );
         if (!parent) continue;
         if (parent.getAttribute('aria-expanded') !== 'true') {
+          const before = menuItems().length;
           parent.click();
-          await sleep(MENU_WAIT_MS);
+          await waitFor(() => menuItems().length > before, MENU_TIMEOUT_MS);
         }
       }
       const item = menuItems().find((el) => startsWith(el.textContent, label));
@@ -80,23 +94,27 @@
     if (running) return;
     running = true;
     try {
-      for (let i = 0; i < MAX_TRIES; i++) {
+      for (let i = 0; i < 3; i++) {
         if (await trySelect()) return;
-        await sleep(RETRY_MS);
+        await closeMenu();
       }
     } finally {
       running = false;
     }
   }
 
-  // 「新しいチャット」はページを読み直さずにモデルを既定へ戻す
+  // 「新しいチャット」はページを読み直さずにモデルを既定へ戻すことがある。戻らなければ何もしない
+  async function onNewChat() {
+    if (await waitFor(() => { const sw = findSwitcher(); return sw && !isTop(sw); }, RESET_TIMEOUT_MS)) run();
+  }
+
   document.addEventListener(
     'click',
     (e) => {
       const el = e.target.closest && e.target.closest('button, a');
       if (!el) return;
       const name = (el.getAttribute('aria-label') || '') + el.textContent;
-      if (/新しいチャット|new chat/i.test(name)) setTimeout(run, 1000);
+      if (/新しいチャット|new chat/i.test(name)) onNewChat();
     },
     true
   );
