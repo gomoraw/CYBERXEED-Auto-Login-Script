@@ -153,10 +153,10 @@ CYBERXEEDのグリッド（申請一覧など）は初期表示だと高さが�
 
 Microsoft 365 Copilot / Microsoft Copilot のチャット画面を開いたとき、モデル選択で **GPT-6.1** を自動で選びます。GPT-6.1 がメニューに無い場合は **Think deeper** を選びます。
 
-- **対象**: `https://m365.cloud.microsoft/*`、`https://copilot.microsoft.com/*`
+- **対象**: `https://copilot.cloud.microsoft/*`（`m365.cloud.microsoft/chat` からの転送先）、`https://m365.cloud.microsoft/*`、`https://copilot.microsoft.com/*`
 - **導入方法**: Tampermonkey を入れたブラウザで [こちらのリンク](https://raw.githubusercontent.com/gomoraw/CYBERXEED-Auto-Login-Script/main/copilot-auto-model-select.user.js) を開き、インストールします。または、Tampermonkey の「新規スクリプト作成」に [copilot-auto-model-select.user.js](copilot-auto-model-select.user.js) の内容を貼り付けて保存します
-- **優先順の変更**: スクリプト先頭の `PRIORITY` に、メニューの表示名を優先順に並べます（部分一致。大文字小文字・空白・ハイフンは区別しません）
-- **動作範囲**: ページを開いたときに 1 回だけ選びます。下の階層のメニューにある項目は選べません
+- **優先順の変更**: スクリプト先頭の `PRIORITY` に、メニューの表示名の先頭を優先順に並べます。下の階層のメニューにある項目は、`submenu` に親メニューの表示名の先頭を書きます（大文字小文字・空白・ハイフンは区別しません）
+- **選び直すタイミング**: ページを開いたとき、および「新しいチャット」を押したとき（どちらもモデルが「自動」に戻るため）
 
 ## ⚠️ 免責事項
 
